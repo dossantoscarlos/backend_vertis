@@ -1,0 +1,4 @@
+interface:
+  display_name: "PHPCS Final Check"
+  short_description: "Run PHPCS before finishing PHP work."
+  default_prompt: "Use this skill to run PHPCS as a final quality gate after Laravel/PHP changes."

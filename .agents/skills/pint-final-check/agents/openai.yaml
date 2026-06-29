@@ -1,0 +1,4 @@
+interface:
+  display_name: "Pint Final Check"
+  short_description: "Run Pint before finishing PHP work."
+  default_prompt: "Use this skill to run Pint as a final formatting gate after Laravel/PHP changes."

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Larastan Final Check"
+  short_description: "Run Larastan before finishing PHP work."
+  default_prompt: "Use this skill to run Larastan as a final static-analysis gate after Laravel/PHP changes."

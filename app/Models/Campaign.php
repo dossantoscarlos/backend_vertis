@@ -5,7 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 
-#[Fillable(['external_id', 'name', 'type', 'region_external_id', 'start_date', 'end_date', 'status', 'description', 'vote_goal'])]
+#[Fillable(['external_id', 'name', 'type', 'region_external_id', 'start_date', 'end_date', 'status', 'description', 'responsible', 'vote_goal'])]
 class Campaign extends Model
 {
     public function getRouteKeyName(): string

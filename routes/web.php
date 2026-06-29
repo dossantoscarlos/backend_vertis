@@ -5,27 +5,35 @@ use App\Livewire\Support\Dashboard;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
-    return redirect()->route('support.dashboard');
+    return redirect()->route('dashboard');
 });
 
 Route::get('/home', function () {
-    return redirect()->route('support.dashboard');
+    return redirect()->route('dashboard');
 })->name('home');
 
-Route::get('/login/supports', LoginForm::class)
+Route::get('/login', LoginForm::class)
     ->middleware('guest')
     ->name('login');
 
-Route::get('/login', function () {
+Route::get('/login/supports', function () {
     return redirect()->route('login');
 });
 
-Route::get('/support/phpinfo', function () {
+Route::get('/phpinfo', function () {
     return view('livewire.support.phpinfo');
 })
     ->middleware('auth')
-    ->name('support.phpinfo');
+    ->name('phpinfo');
 
-Route::get('/support', Dashboard::class)
+Route::get('/dashboard', Dashboard::class)
     ->middleware('auth')
-    ->name('support.dashboard');
+    ->name('dashboard');
+
+Route::get('/modulos', function () {
+    return redirect()->route('dashboard');
+});
+
+Route::get('/support', function () {
+    return redirect()->route('dashboard');
+});

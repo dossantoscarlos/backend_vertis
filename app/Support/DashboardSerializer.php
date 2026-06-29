@@ -29,7 +29,7 @@ class DashboardSerializer
     }
 
     /**
-     * @return array{id: string, name: string, type: string, regionId: string, startDate: string, endDate: string, status: string, description: string, voteGoal?: int|null}
+     * @return array{id: string, name: string, type: string, regionId: string, startDate: string, endDate: string, status: string, description: string, responsible: string, voteGoal?: int|null}
      */
     public function campaign(Campaign $campaign): array
     {
@@ -42,6 +42,7 @@ class DashboardSerializer
             'endDate' => $campaign->end_date->toDateString(),
             'status' => $campaign->status,
             'description' => (string) $campaign->description,
+            'responsible' => (string) $campaign->responsible,
             'voteGoal' => $campaign->vote_goal,
         ];
     }
@@ -105,6 +106,43 @@ class DashboardSerializer
             'name' => $role->name,
             'description' => (string) $role->description,
             'permissions' => $role->permissions->pluck('name')->sort()->values()->all(),
+        ];
+    }
+
+    /**
+     * @return array{id: string, type: string, transactionDate: string, competencyDate: string, projectedCost: float, finalCost: float, entityType: string, entityExternalId: string, responsible: string, approver: string|null}
+     */
+    public function financialTransaction(\App\Models\FinancialTransaction $tx): array
+    {
+        return [
+            'id' => $tx->external_id,
+            'type' => $tx->type,
+            'transactionDate' => $tx->transaction_date->toDateString(),
+            'competencyDate' => $tx->competency_date->toDateString(),
+            'projectedCost' => (float) $tx->projected_cost,
+            'finalCost' => (float) $tx->final_cost,
+            'entityType' => $tx->entity_type,
+            'entityExternalId' => $tx->entity_external_id,
+            'responsible' => $tx->responsible,
+            'approver' => $tx->approver,
+        ];
+    }
+
+    /**
+     * @return array{id: string, name: string, description: string, startDate: string, endDate: string, type: string, responsible: string, targetAudience: string, link: string|null}
+     */
+    public function survey(\App\Models\Survey $survey): array
+    {
+        return [
+            'id' => $survey->external_id,
+            'name' => $survey->name,
+            'description' => (string) $survey->description,
+            'startDate' => $survey->start_date->toDateString(),
+            'endDate' => $survey->end_date->toDateString(),
+            'type' => $survey->type,
+            'responsible' => $survey->responsible,
+            'targetAudience' => $survey->target_audience,
+            'link' => $survey->link,
         ];
     }
 }

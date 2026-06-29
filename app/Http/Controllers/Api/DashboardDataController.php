@@ -30,6 +30,8 @@ class DashboardDataController extends Controller
             'users' => User::query()->with('roles')->oldest('id')->get()->map(fn (User $user): array => $serializer->user($user))->values(),
             'roles' => Role::query()->with('permissions')->oldest('id')->get()->map(fn (Role $role): array => $serializer->role($role))->values(),
             'availablePermissions' => config('acl.permissions', []),
+            'finances' => \App\Models\FinancialTransaction::query()->latest('id')->get()->map(fn (\App\Models\FinancialTransaction $tx): array => $serializer->financialTransaction($tx))->values(),
+            'surveys' => \App\Models\Survey::query()->oldest('id')->get()->map(fn (\App\Models\Survey $survey): array => $serializer->survey($survey))->values(),
         ]);
     }
 }

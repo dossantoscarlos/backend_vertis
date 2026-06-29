@@ -21,6 +21,9 @@ return [
         ['id' => 'tre:consultar', 'label' => 'Consultar TRE', 'group' => 'TRE'],
         ['id' => 'permissoes:gerenciar', 'label' => 'Gerenciar permissões', 'group' => 'Permissões'],
         ['id' => 'perfil:visualizar', 'label' => 'Visualizar perfil', 'group' => 'Perfil'],
+        ['id' => 'financeiro:gerenciar', 'label' => 'Gerenciar financeiro', 'group' => 'Financeiro'],
+        ['id' => 'pesquisas:gerenciar', 'label' => 'Gerenciar pesquisas', 'group' => 'Pesquisas'],
+        ['id' => 'pesquisas:visualizar', 'label' => 'Visualizar pesquisas', 'group' => 'Pesquisas'],
     ],
 
     'roles' => [
@@ -45,6 +48,9 @@ return [
                 'campanhas:visualizar',
                 'campanhas:executar',
                 'perfil:visualizar',
+                'financeiro:gerenciar',
+                'pesquisas:gerenciar',
+                'pesquisas:visualizar',
             ],
         ],
         'role-coordenador' => [
@@ -61,6 +67,8 @@ return [
                 'campanhas:gerenciar',
                 'campanhas:visualizar',
                 'perfil:visualizar',
+                'pesquisas:gerenciar',
+                'pesquisas:visualizar',
             ],
         ],
         'role-agente' => [
@@ -72,6 +80,7 @@ return [
                 'campanhas:visualizar',
                 'campanhas:executar',
                 'perfil:visualizar',
+                'pesquisas:visualizar',
             ],
         ],
         'role-analista' => [
@@ -84,6 +93,7 @@ return [
                 'tre:consultar',
                 'campanhas:visualizar',
                 'perfil:visualizar',
+                'pesquisas:visualizar',
             ],
         ],
         'role-suporte-n1' => [
@@ -95,6 +105,7 @@ return [
                 'campanhas:executar',
                 'locais:visualizar',
                 'perfil:visualizar',
+                'pesquisas:visualizar',
             ],
         ],
         'role-suporte-n2' => [
@@ -116,6 +127,9 @@ return [
                 'relatorios:exportar',
                 'tre:consultar',
                 'perfil:visualizar',
+                'financeiro:gerenciar',
+                'pesquisas:gerenciar',
+                'pesquisas:visualizar',
             ],
         ],
         'role-suporte-n3' => [
@@ -139,6 +153,9 @@ return [
                 'campanhas:visualizar',
                 'campanhas:executar',
                 'perfil:visualizar',
+                'financeiro:gerenciar',
+                'pesquisas:gerenciar',
+                'pesquisas:visualizar',
             ],
         ],
     ],

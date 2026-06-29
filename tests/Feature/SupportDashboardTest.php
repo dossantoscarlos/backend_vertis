@@ -25,49 +25,54 @@ function makeSupportRole(string $externalId, string $name): Role
     return $role;
 }
 
-function writeSupportLog(string $date, string $message): string
+function makeSupportUser(string $externalId, string $name, string $email): User
 {
-    $path = storage_path("logs/laravel-{$date}.log");
+    $role = makeSupportRole($externalId, $name);
+
+    $user = User::factory()->create([
+        'email' => $email,
+        'password' => 'password123',
+        'status' => 'ativo',
+    ]);
+
+    $user->syncRoles([$role->name]);
+
+    return $user;
+}
+
+function writeSupportLog(string $fileName, string $message): string
+{
+    $path = storage_path("logs/{$fileName}");
 
     File::put($path, sprintf(
-        "[%s 10:15:00] local.ERROR: %s {\"exception\":\"[object] (RuntimeException(code: 0): %s)\"}\n",
-        $date,
+        "[2026-06-27 10:15:00] local.ERROR: %s\n[2026-06-27 10:16:00] local.ERROR: %s",
         $message,
-        $message,
+        $message . ' final'
     ));
 
     return $path;
 }
 
-test('support users can open the dashboard', function (): void {
-    $role = makeSupportRole('role-suporte-n1', 'Suporte N1');
-    $user = User::factory()->create([
-        'email' => 'suporte.n1@vertis.com.local',
-        'password' => 'password123',
-        'status' => 'ativo',
-    ]);
-    $user->syncRoles([$role->name]);
+test('support users can open the workspace shell', function (): void {
+    $user = makeSupportUser('role-suporte-n1', 'Suporte N1', 'suporte.n1@vertis.com.local');
 
     $this->actingAs($user)
-        ->get('/support')
+        ->get('/dashboard')
         ->assertOk()
-        ->assertSee('Workspace ExtJS')
-        ->assertSee('Área de Trabalho')
-        ->assertSee('Painel de suporte');
+        ->assertSee('Vertis Support Workspace')
+        ->assertSee('Bases de dados')
+        ->assertSee('Schema')
+        ->assertSee('Status: Pronto');
 });
 
 test('guests are redirected to login from the dashboard', function (): void {
-    $this->get('/support')->assertRedirect('/login/supports');
+    $this->get('/dashboard')->assertRedirect('/login');
 });
 
-test('guests can open the support login page', function (): void {
-    $this->get('/login/supports')
+test('guests can open the login page', function (): void {
+    $this->get('/login')
         ->assertOk()
-        ->assertSee('Entrar no suporte');
-});
-
-test('backend login alias redirects to the support login page', function (): void {
-    $this->get('/login')->assertRedirect('/login/supports');
+        ->assertSee('Entrar no workspace');
 });
 
 test('login form rejects non-support profiles', function (): void {
@@ -85,78 +90,62 @@ test('login form rejects non-support profiles', function (): void {
 });
 
 test('login form authenticates support profiles', function (): void {
-    $role = makeSupportRole('role-suporte-n2', 'Suporte N2');
-    $user = User::factory()->create([
-        'email' => 'suporte.n2@vertis.com.local',
-        'password' => 'password123',
-        'status' => 'ativo',
-    ]);
-    $user->syncRoles([$role->name]);
+    $user = makeSupportUser('role-suporte-n2', 'Suporte N2', 'suporte.n2@vertis.com.local');
 
     Livewire::test(LoginForm::class)
         ->set('email', $user->email)
         ->set('password', 'password123')
         ->call('login')
-        ->assertRedirect(route('support.dashboard'));
+        ->assertRedirect(route('dashboard'));
 });
 
-test('support dashboard shows logs grouped by day', function (): void {
-    $role = makeSupportRole('role-suporte-n1', 'Suporte N1');
-    $user = User::factory()->create([
-        'email' => 'suporte.n1@vertis.com.local',
+test('support n2 can inspect the schema and execute read only sql', function (): void {
+    $user = makeSupportUser('role-suporte-n2', 'Suporte N2', 'suporte.n2@vertis.com.local');
+    $account = User::factory()->create([
+        'email' => 'consulta.alvo@vertis.com.local',
         'password' => 'password123',
         'status' => 'ativo',
     ]);
-    $user->syncRoles([$role->name]);
 
-    $olderLog = writeSupportLog('2099-01-01', 'Falha antiga de integração');
-    $newerLog = writeSupportLog('2099-01-02', 'Falha recente de integração');
+    Livewire::actingAs($user)
+        ->test(Dashboard::class)
+        ->assertSee('Schema')
+        ->assertSee('Bases de dados')
+        ->call('setTab', 'sql')
+        ->assertSet('activeTab', 'sql')
+        ->set('sqlQuery', "select email from users where email = '{$account->email}' limit 1;")
+        ->call('executeQuery')
+        ->assertSet('sqlAffectedRows', 1)
+        ->assertSet('sqlRows.0.email', $account->email)
+        ->assertSee($account->email);
+});
+
+test('support n2 cannot access the debug tab', function (): void {
+    $user = makeSupportUser('role-suporte-n2', 'Suporte N2', 'suporte.n2@vertis.com.local');
+
+    Livewire::actingAs($user)
+        ->test(Dashboard::class)
+        ->call('setTab', 'debug')
+        ->assertSet('activeTab', 'schema');
+});
+
+test('support n3 can use terminal commands and log selection', function (): void {
+    $user = makeSupportUser('role-suporte-n3', 'Suporte N3', 'suporte.n3@vertis.com.local');
+    $logFile = writeSupportLog('vertis-support-debug.log', 'Falha de integração');
 
     try {
         Livewire::actingAs($user)
             ->test(Dashboard::class)
-            ->call('setSection', 'logs')
-            ->assertSee('Logs por dia')
-            ->assertSee('02/01/2099')
-            ->assertSee('Falha recente de integração')
-            ->set('selectedLogDay', '2099-01-01')
-            ->assertSee('01/01/2099')
-            ->assertSee('Falha antiga de integração');
+            ->call('setTab', 'debug')
+            ->assertSet('activeTab', 'debug')
+            ->set('debugCommand', 'printf vertis')
+            ->call('runTerminal')
+            ->assertSet('debugExitCode', 0)
+            ->assertSet('debugOutput', 'vertis')
+            ->assertSee('Baixar arquivo completo')
+            ->call('selectTail', $logFile)
+            ->assertSet('tailPath', $logFile);
     } finally {
-        File::delete($olderLog);
-        File::delete($newerLog);
+        File::delete($logFile);
     }
-});
-
-test('support n2 can view the acl section in read only mode', function (): void {
-    $role = makeSupportRole('role-suporte-n2', 'Suporte N2');
-    $user = User::factory()->create([
-        'email' => 'suporte.n2@vertis.com.local',
-        'password' => 'password123',
-        'status' => 'ativo',
-    ]);
-    $user->syncRoles([$role->name]);
-
-    Livewire::actingAs($user)
-        ->test(Dashboard::class)
-        ->call('setTab', 'roles')
-        ->assertSee('Perfis e permissões')
-        ->assertSee('Leitura da matriz de ACL');
-});
-
-test('support dashboard opens with workspace tabs', function (): void {
-    $role = makeSupportRole('role-suporte-n1', 'Suporte N1');
-    $user = User::factory()->create([
-        'email' => 'suporte.n1@vertis.com.local',
-        'password' => 'password123',
-        'status' => 'ativo',
-    ]);
-    $user->syncRoles([$role->name]);
-
-    Livewire::actingAs($user)
-        ->test(Dashboard::class)
-        ->assertSee('Workspace ExtJS')
-        ->assertSee('Área de Trabalho')
-        ->assertSee('Jobs')
-        ->assertSee('Logs');
 });

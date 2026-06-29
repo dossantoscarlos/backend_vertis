@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="pt-BR" class="h-full bg-zinc-100 dark:bg-zinc-950">
+<html lang="pt-BR" class="h-full bg-zinc-50">
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -8,7 +8,7 @@
         @vite(['resources/css/app.css', 'resources/js/app.js'])
         @livewireStyles
     </head>
-    <body class="h-full antialiased">
+    <body class="h-full bg-zinc-50 antialiased text-zinc-900">
         {{ $slot }}
         @livewireScripts
     </body>

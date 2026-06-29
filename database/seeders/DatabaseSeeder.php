@@ -93,6 +93,13 @@ class DatabaseSeeder extends Seeder
             $role = Role::query()->where('external_id', $roleId)->firstOrFail();
             $user->syncRoles([$role->name]);
         }
+
+        foreach ($this->surveys() as $survey) {
+            \App\Models\Survey::query()->updateOrCreate(
+                ['external_id' => $survey['external_id']],
+                $survey,
+            );
+        }
     }
 
     /**
@@ -114,10 +121,10 @@ class DatabaseSeeder extends Seeder
     private function campaigns(): array
     {
         return [
-            ['external_id' => 'cam-1', 'name' => 'Mutirão Zona Norte', 'type' => 'door-to-door', 'region_external_id' => 'reg-1', 'start_date' => '2026-06-15', 'end_date' => '2026-06-20', 'status' => 'em andamento', 'description' => 'Visita porta a porta nos bairros de Santana e Tucuruvi'],
-            ['external_id' => 'cam-2', 'name' => 'Comício Praça da Sé', 'type' => 'comício', 'region_external_id' => 'reg-4', 'start_date' => '2026-07-01', 'end_date' => '2026-07-01', 'status' => 'planejada', 'description' => 'Grande comício com presença de lideranças regionais'],
-            ['external_id' => 'cam-3', 'name' => 'Campanha Digital #FuturoSP', 'type' => 'digital', 'region_external_id' => 'reg-4', 'start_date' => '2026-05-01', 'end_date' => '2026-10-05', 'status' => 'em andamento', 'description' => 'Anúncios segmentados em redes sociais por região'],
-            ['external_id' => 'cam-4', 'name' => 'Programa Rádio Interior', 'type' => 'rádio', 'region_external_id' => 'reg-3', 'start_date' => '2026-06-01', 'end_date' => '2026-08-30', 'status' => 'planejada', 'description' => 'Inserções em rádios do interior oeste'],
+            ['external_id' => 'cam-1', 'name' => 'Mutirão Zona Norte', 'type' => 'door-to-door', 'region_external_id' => 'reg-1', 'start_date' => '2026-06-15', 'end_date' => '2026-06-20', 'status' => 'em andamento', 'description' => 'Visita porta a porta nos bairros de Santana e Tucuruvi', 'responsible' => 'Maria Silva'],
+            ['external_id' => 'cam-2', 'name' => 'Comício Praça da Sé', 'type' => 'comício', 'region_external_id' => 'reg-4', 'start_date' => '2026-07-01', 'end_date' => '2026-07-01', 'status' => 'planejada', 'description' => 'Grande comício com presença de lideranças regionais', 'responsible' => 'Administrador'],
+            ['external_id' => 'cam-3', 'name' => 'Campanha Digital #FuturoSP', 'type' => 'digital', 'region_external_id' => 'reg-4', 'start_date' => '2026-05-01', 'end_date' => '2026-10-05', 'status' => 'em andamento', 'description' => 'Anúncios segmentados em redes sociais por região', 'responsible' => 'Administrador'],
+            ['external_id' => 'cam-4', 'name' => 'Programa Rádio Interior', 'type' => 'rádio', 'region_external_id' => 'reg-3', 'start_date' => '2026-06-01', 'end_date' => '2026-08-30', 'status' => 'planejada', 'description' => 'Inserções em rádios do interior oeste', 'responsible' => 'Maria Silva'],
         ];
     }
 
@@ -160,6 +167,37 @@ class DatabaseSeeder extends Seeder
             ['external_id' => 'support-n1', 'name' => 'Suporte N1', 'email' => 'suporte.n1@vertis.com.local', 'email_verified_at' => now(), 'password' => Hash::make('password123'), 'status' => 'ativo', 'role_id' => 'role-suporte-n1', 'created_at' => '2026-06-27 00:00:00', 'updated_at' => now()],
             ['external_id' => 'support-n2', 'name' => 'Suporte N2', 'email' => 'suporte.n2@vertis.com.local', 'email_verified_at' => now(), 'password' => Hash::make('password123'), 'status' => 'ativo', 'role_id' => 'role-suporte-n2', 'created_at' => '2026-06-27 00:00:00', 'updated_at' => now()],
             ['external_id' => 'support-n3', 'name' => 'Suporte N3', 'email' => 'suporte.n3@vertis.com.local', 'email_verified_at' => now(), 'password' => Hash::make('password123'), 'status' => 'ativo', 'role_id' => 'role-suporte-n3', 'created_at' => '2026-06-27 00:00:00', 'updated_at' => now()],
+        ];
+    }
+
+    /**
+     * @return array<int, array<string, mixed>>
+     */
+    private function surveys(): array
+    {
+        return [
+            [
+                'external_id' => 'srv-1',
+                'name' => 'Pesquisa de Intenção de Voto - Santana',
+                'description' => 'Mapeamento de intenção de voto espontânea e estimulada no bairro de Santana.',
+                'start_date' => '2026-06-01',
+                'end_date' => '2026-06-10',
+                'type' => 'porta',
+                'responsible' => 'Maria Silva',
+                'target_audience' => 'Moradores do distrito de Santana (maiores de 16 anos)',
+                'link' => null,
+            ],
+            [
+                'external_id' => 'srv-2',
+                'name' => 'Pesquisa Temática - Saúde e Segurança',
+                'description' => 'Avaliação dos serviços de saúde e percepção de segurança nas capitais.',
+                'start_date' => '2026-06-15',
+                'end_date' => '2026-07-15',
+                'type' => 'online',
+                'responsible' => 'Administrador',
+                'target_audience' => 'Eleitores da Região Metropolitana',
+                'link' => 'https://forms.gle/exemploSaudeSeguranca',
+            ],
         ];
     }
 }

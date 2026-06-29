@@ -69,6 +69,7 @@ class CampaignController extends Controller
             'endDate' => ['required', 'date', 'after_or_equal:startDate'],
             'status' => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
+            'responsible' => ['required', 'string', 'max:255'],
             'voteGoal' => ['nullable', 'integer', 'min:0'],
         ]);
     }
@@ -88,6 +89,7 @@ class CampaignController extends Controller
             'end_date' => $data['endDate'],
             'status' => $data['status'],
             'description' => $data['description'] ?? '',
+            'responsible' => $data['responsible'],
             'vote_goal' => $data['voteGoal'] ?? null,
         ];
     }

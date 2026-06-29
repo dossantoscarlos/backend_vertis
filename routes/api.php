@@ -9,6 +9,8 @@ use App\Http\Controllers\Api\DashboardUserController;
 use App\Http\Controllers\Api\PartnerController;
 use App\Http\Controllers\Api\RegionController;
 use App\Http\Controllers\Api\RoleController;
+use App\Http\Controllers\Api\FinancialTransactionController;
+use App\Http\Controllers\Api\SurveyController;
 use Illuminate\Support\Facades\Route;
 
 Route::post('/auth/login', LoginController::class)->name('api.auth.login');
@@ -23,4 +25,10 @@ Route::apiResource('locations', CampaignLocationController::class)->parameters([
 Route::apiResource('users', DashboardUserController::class);
 Route::apiResource('roles', RoleController::class)->parameters([
     'roles' => 'role',
+]);
+Route::apiResource('finances', FinancialTransactionController::class)->parameters([
+    'finances' => 'financialTransaction',
+]);
+Route::apiResource('surveys', SurveyController::class)->parameters([
+    'surveys' => 'survey',
 ]);

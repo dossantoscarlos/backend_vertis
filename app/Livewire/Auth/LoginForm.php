@@ -43,7 +43,7 @@ class LoginForm extends Component
             Auth::logout();
 
             throw ValidationException::withMessages([
-                'email' => ['Este acesso é exclusivo para perfis de suporte.'],
+                'email' => ['Este acesso é exclusivo para perfis autorizados.'],
             ]);
         }
 
@@ -51,7 +51,7 @@ class LoginForm extends Component
             request()->session()->regenerate();
         }
 
-        return $this->redirectRoute('support.dashboard', navigate: true);
+        return $this->redirectRoute('dashboard', navigate: true);
     }
 
     public function render(): View

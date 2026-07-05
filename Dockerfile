@@ -69,7 +69,7 @@ RUN apt-get clean && rm -rf /var/lib/apt/lists/*
 
 RUN apt install npm -y
 
-RUN npm run build
+RUN npm install && npm run build
 
 EXPOSE 10000
 

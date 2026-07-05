@@ -266,9 +266,7 @@ class Dashboard extends Component
         request()->session()->invalidate();
         request()->session()->regenerateToken();
         
-        $host = request()->getHost();
-        $scheme = request()->getScheme();
-        return redirect("{$scheme}://{$host}:8090/login");
+        return redirect()->route('login');
     }
 
     public function toJSON(mixed $value = null): void

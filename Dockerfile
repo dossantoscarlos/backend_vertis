@@ -1,12 +1,12 @@
 # Argumentos da Imagem
 ## Versão da Imagem Docker PHP
-ARG PHP_VERSION=8.2-fpm
+ARG PHP_VERSION=8.4fpm
 FROM php:${PHP_VERSION}
 
 ## Diretório da aplicação
 ARG APP_DIR=/var/www
 ## Versão da Lib do Redis para PHP
-ARG REDIS_LIB_VERSION=5.3.7
+ARG REDIS_LIB_VERSION=6.3.0
 
 RUN apt-get update
 RUN apt-get install -y --no-install-recommends \

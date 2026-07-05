@@ -7,6 +7,15 @@
                 "/home/kdu/pro_vertis/backend/artisan",
                 "boost:mcp"
             ]
+        },
+        "banco_Vercel": {
+            "command": "wsl.exe",
+            "args": [
+                "npx",
+                "-y",
+                "@modelcontextprotocol/server-postgres",
+                "postgresql://default:A8c2XvjdmpWu@ep-divine-sun-a4vwxz09-pooler.us-east-1.aws.neon.tech/verceldb?sslmode=require"
+            ]
         }
     }
 }

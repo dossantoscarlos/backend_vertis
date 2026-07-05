@@ -22,6 +22,7 @@ use Throwable;
 class Dashboard extends Component
 {
     public string $activeTab = 'dashboard';
+    public ?int $selectedAuditId = null;
 
     public array $openTabs = [];
 
@@ -218,16 +219,44 @@ class Dashboard extends Component
 
     public function render(): View
     {
+        $dbUsers = User::query()->with('roles')->oldest('id')->get();
+        $dbFinanceUsers = $dbUsers->reject(function ($user) {
+            $keywords = ['root', 'admin', 'administrador', 'super usuario', 'super-usuario', 'suporte', 'support'];
+            
+            // Check name, email, and role_id
+            $text = strtolower($user->name . ' ' . $user->email . ' ' . ($user->role_id ?? ''));
+            foreach ($keywords as $kw) {
+                if (str_contains($text, $kw)) {
+                    return true;
+                }
+            }
+
+            // Check linked spatie roles
+            foreach ($user->roles as $role) {
+                $roleName = strtolower($role->name);
+                foreach ($keywords as $kw) {
+                    if (str_contains($roleName, $kw)) {
+                        return true;
+                    }
+                }
+            }
+            
+            return false;
+        });
+
         return view('livewire.support.dashboard', [
             'dbRegions' => Region::query()->oldest('id')->get(),
             'dbCampaigns' => Campaign::query()->oldest('id')->get(),
             'dbPartners' => Partner::query()->oldest('id')->get(),
             'dbLocations' => CampaignLocation::query()->oldest('id')->get(),
-            'dbUsers' => User::query()->with('roles')->oldest('id')->get(),
+            'dbUsers' => $dbUsers,
+            'dbFinanceUsers' => $dbFinanceUsers,
             'dbRoles' => Role::query()->with('permissions')->oldest('id')->get(),
             'dbAvailablePermissions' => config('acl.permissions', []),
             'dbFinances' => \App\Models\FinancialTransaction::query()->latest('id')->get(),
             'dbSurveys' => \App\Models\Survey::query()->latest('id')->get(),
+            'dbAudits' => \App\Models\AuditoriaFinanceira::query()->orderBy('criado_em', 'desc')->orderBy('id', 'desc')->get(),
+            'selectedAudit' => $this->selectedAuditId ? \App\Models\AuditoriaFinanceira::find($this->selectedAuditId) : null,
         ])->layout('layouts.support');
     }
 
@@ -236,7 +265,10 @@ class Dashboard extends Component
         Auth::logout();
         request()->session()->invalidate();
         request()->session()->regenerateToken();
-        return redirect()->route('login');
+        
+        $host = request()->getHost();
+        $scheme = request()->getScheme();
+        return redirect("{$scheme}://{$host}:8090/login");
     }
 
     public function toJSON(mixed $value = null): void
@@ -323,6 +355,8 @@ class Dashboard extends Component
             'dashboard' => ['title' => 'Dashboard', 'icon' => '📊', 'permission' => 'dashboard:visualizar'],
             'campanhas' => ['title' => 'Gestão de Campanhas', 'icon' => '📣', 'permission' => 'campanhas:gerenciar'],
             'financeiro' => ['title' => 'Área Financeira', 'icon' => '💰', 'permission' => 'financeiro:gerenciar'],
+            'parecer' => ['title' => 'Parecer', 'icon' => '⚖️', 'permission' => 'parecer:visualizar'],
+            'redesocial' => ['title' => 'Rede Social', 'icon' => '💬'],
             'usuarios' => ['title' => 'Equipe Operacional', 'icon' => '👤', 'permission' => 'usuarios:gerenciar'],
             'parceiros' => ['title' => 'Gestão de Parceiros', 'icon' => '🤝', 'permission' => 'parceiros:gerenciar'],
             'locais' => ['title' => 'Locais e Comitês', 'icon' => '📍', 'permission' => 'locais:gerenciar'],
@@ -804,6 +838,7 @@ class Dashboard extends Component
     public function saveFinance(): void
     {
         $this->financeCompetencyDate = $this->financeTransactionDate;
+        $this->financeProjectedCost = $this->financeFinalCost;
 
         $this->validate([
             'financeType' => 'required|string|in:receita,despesa',
@@ -832,8 +867,19 @@ class Dashboard extends Component
             ]);
             $this->dispatch('toast', message: 'Lançamento financeiro atualizado.');
         } else {
-            \App\Models\FinancialTransaction::query()->create([
+            $tx = \App\Models\FinancialTransaction::query()->create([
                 'external_id' => 'fin-' . time() . rand(100, 999),
+                'type' => $this->financeType,
+                'transaction_date' => $this->financeTransactionDate,
+                'competency_date' => $this->financeCompetencyDate,
+                'projected_cost' => $this->financeProjectedCost,
+                'final_cost' => $this->financeFinalCost,
+                'entity_type' => $this->financeEntityType,
+                'entity_external_id' => $this->financeEntityExternalId,
+                'responsible' => $this->financeResponsible,
+                'approver' => $this->financeApprover,
+            ]);
+            \App\Support\FinancialAuditService::audit($tx, [
                 'type' => $this->financeType,
                 'transaction_date' => $this->financeTransactionDate,
                 'competency_date' => $this->financeCompetencyDate,
@@ -1369,9 +1415,38 @@ class Dashboard extends Component
             return;
         }
 
+        if (!is_string($this->debugCommand)) {
+            $this->debugCommand = '';
+            $this->debugError = 'O comando deve ser uma string válida.';
+            return;
+        }
+
         $command = trim($this->debugCommand);
-        if ($command === '') {
-            $this->debugError = 'Informe um comando para executar.';
+        if (strlen($command) < 2) {
+            $this->debugError = 'O comando deve conter pelo menos 2 caracteres.';
+            return;
+        }
+
+        // Security check: reject chaining/piping characters to prevent command injection
+        if (preg_match('/[;&|`\n$]/', $command)) {
+            $this->debugError = 'Caracteres de encadeamento ou injeção de comandos não são permitidos.';
+            return;
+        }
+
+        // Validate command against whitelist
+        $allowed = false;
+        if ($command === 'ls' || $command === 'dir' || $command === 'php artisan') {
+            $allowed = true;
+        } elseif (
+            str_starts_with($command, 'ls ') ||
+            str_starts_with($command, 'dir ') ||
+            str_starts_with($command, 'php artisan ')
+        ) {
+            $allowed = true;
+        }
+
+        if (!$allowed) {
+            $this->debugError = 'Comando não permitido. Apenas ls, dir e comandos php artisan são permitidos.';
             return;
         }
 
@@ -1428,6 +1503,47 @@ class Dashboard extends Component
         $lines = preg_split('/\R/u', rtrim($content, "\r\n")) ?: [];
         $lines = array_slice($lines, -max(1, $this->tailLines));
         $this->tailOutput = implode(PHP_EOL, $lines);
+    }
+
+    public function getParsedLogsByDay(): array
+    {
+        $path = trim($this->tailPath);
+        if ($path === '' || !File::exists($path)) {
+            return [];
+        }
+
+        $content = (string) File::get($path);
+        $lines = preg_split('/\R/u', rtrim($content, "\r\n")) ?: [];
+        $recentLines = array_slice($lines, -500); // Last 500 lines for performance
+
+        $entries = [];
+        $currentDate = 'Desconhecido';
+        $currentEntry = '';
+
+        foreach ($recentLines as $line) {
+            if (preg_match('/^\[(\d{4}-\d{2}-\d{2}) (\d{2}:\d{2}:\d{2})\] (.*)$/u', $line, $matches)) {
+                if ($currentEntry !== '') {
+                    $entries[$currentDate][] = $currentEntry;
+                }
+                $currentDate = $matches[1];
+                $time = $matches[2];
+                $message = $matches[3];
+                $currentEntry = "[$time] $message";
+            } else {
+                if ($currentEntry !== '') {
+                    $currentEntry .= PHP_EOL . $line;
+                } else {
+                    $currentEntry = $line;
+                }
+            }
+        }
+
+        if ($currentEntry !== '') {
+            $entries[$currentDate][] = $currentEntry;
+        }
+
+        krsort($entries);
+        return $entries;
     }
 
     public function useLatestLog(): void
@@ -1811,6 +1927,17 @@ class Dashboard extends Component
             ),
             default => [],
         };
+    }
+
+    public function showAuditDetails(int $id): void
+    {
+        abort_unless(auth()->user()->can('parecer:visualizar'), 403);
+        $this->selectedAuditId = $id;
+    }
+
+    public function closeAuditDetails(): void
+    {
+        $this->selectedAuditId = null;
     }
 
     private function describeSqliteTable(Connection $connection, string $table): array

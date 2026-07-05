@@ -11,6 +11,7 @@ use App\Http\Controllers\Api\RegionController;
 use App\Http\Controllers\Api\RoleController;
 use App\Http\Controllers\Api\FinancialTransactionController;
 use App\Http\Controllers\Api\SurveyController;
+use App\Http\Controllers\Api\FinancialAuditController;
 use Illuminate\Support\Facades\Route;
 
 Route::post('/auth/login', LoginController::class)->name('api.auth.login');
@@ -32,3 +33,4 @@ Route::apiResource('finances', FinancialTransactionController::class)->parameter
 Route::apiResource('surveys', SurveyController::class)->parameters([
     'surveys' => 'survey',
 ]);
+Route::get('/audits', [FinancialAuditController::class, 'index'])->name('api.audits.index');

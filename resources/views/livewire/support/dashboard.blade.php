@@ -32,7 +32,7 @@ $currentUser = auth()->user();
 <div class="{{ $profileMode === 'dark' ? 'dark' : '' }} h-screen w-screen overflow-hidden" 
      x-data="{ 
         isSidebarCollapsed: false, 
-        collapsedGroups: { operacao: false, cadastros: false, inteligencia: false, configuracao: false, suporte: false },
+        collapsedGroups: { operacao: false, cadastros: false, inteligencia: false, comunicacao: false, configuracao: false, suporte: false },
         toastMessage: '',
         toastType: 'success',
         showToast(msg, type = 'success') {
@@ -161,6 +161,14 @@ $currentUser = auth()->user();
                                     </button>
                                 </li>
                                 @endif
+                                @if($currentUser->can('parecer:visualizar'))
+                                <li>
+                                    <button type="button" wire:click="openTab('parecer')" class="flex w-full h-7 items-center gap-2 px-3 transition-colors text-left rounded-sm font-medium {{ $activeTab === 'parecer' ? $themeConfig['sidebarActiveNode'] : 'text-[#555] dark:text-zinc-400 hover:bg-[#f0f4f8] dark:hover:bg-[#1a2533]' }}">
+                                        <span>⚖️</span>
+                                        <span>Parecer</span>
+                                    </button>
+                                </li>
+                                @endif
                             </ul>
                         </div>
 
@@ -249,6 +257,25 @@ $currentUser = auth()->user();
                             </ul>
                         </div>
                         @endif
+
+                        <!-- COMUNICACAO GROUP -->
+                        <div class="border border-[#d0d6de] dark:border-[#2b3e51] bg-white dark:bg-[#16222f] rounded overflow-hidden shadow-xs">
+                            <button type="button" @click="collapsedGroups.comunicacao = !collapsedGroups.comunicacao" class="flex w-full h-7 items-center justify-between bg-gradient-to-b from-[#f9fbfd] to-[#eaeef3] dark:from-[#1e2d3d] dark:to-[#16222f] px-2 font-bold text-[#3a4f66] dark:text-zinc-300">
+                                <div class="flex items-center gap-1.5 text-[10px]">
+                                    <span>💬</span>
+                                    <span>Comunicação</span>
+                                </div>
+                                <span class="text-[8px] font-mono text-[#8a99a8]" x-text="collapsedGroups.comunicacao ? '＋' : '－'"></span>
+                            </button>
+                            <ul x-show="!collapsedGroups.comunicacao" class="divide-y divide-[#f2f4f6] dark:divide-[#1f2d3d] p-0.5">
+                                <li>
+                                    <button type="button" wire:click="openTab('redesocial')" class="flex w-full h-7 items-center gap-2 px-3 transition-colors text-left rounded-sm font-medium {{ $activeTab === 'redesocial' ? $themeConfig['sidebarActiveNode'] : 'text-[#555] dark:text-zinc-400 hover:bg-[#f0f4f8] dark:hover:bg-[#1a2533]' }}">
+                                        <span>💬</span>
+                                        <span>Rede Social</span>
+                                    </button>
+                                </li>
+                            </ul>
+                        </div>
 
                         <!-- CONFIGURACOES GROUP -->
                         <div class="border border-[#d0d6de] dark:border-[#2b3e51] bg-white dark:bg-[#16222f] rounded overflow-hidden shadow-xs">
@@ -645,12 +672,7 @@ $currentUser = auth()->user();
                                     </div>
 
                                     <div class="flex flex-col gap-1">
-                                        <label class="block text-[10px] font-bold text-zinc-400 uppercase mb-1">Valor Previsto (R$)</label>
-                                        <input type="number" step="0.01" min="0" wire:model="financeProjectedCost" class="w-full border border-[#cbd5e1] bg-white dark:bg-zinc-900 px-3 py-1.5 text-xs rounded text-zinc-900 dark:text-zinc-100" placeholder="0,00" required>
-                                    </div>
-
-                                    <div class="flex flex-col gap-1">
-                                        <label class="block text-[10px] font-bold text-zinc-400 uppercase mb-1">Valor Final (R$)</label>
+                                        <label class="block text-[10px] font-bold text-zinc-400 uppercase mb-1">Valor (R$)</label>
                                         <input type="number" step="0.01" min="0" wire:model="financeFinalCost" class="w-full border border-[#cbd5e1] bg-white dark:bg-zinc-900 px-3 py-1.5 text-xs rounded text-zinc-900 dark:text-zinc-100" placeholder="0,00" required>
                                     </div>
 
@@ -689,7 +711,7 @@ $currentUser = auth()->user();
                                         @if($financeEntityType === 'eventos')
                                         <select wire:model="financeResponsible" class="w-full border border-[#cbd5e1] bg-white dark:bg-zinc-900 px-3 py-1.5 text-xs rounded text-zinc-900 dark:text-zinc-100" required>
                                             <option value="">Selecione o Responsável</option>
-                                            @foreach($dbUsers as $user)
+                                            @foreach($dbFinanceUsers as $user)
                                             <option value="{{ $user->name }}">{{ $user->name }}</option>
                                             @endforeach
                                         </select>
@@ -702,7 +724,7 @@ $currentUser = auth()->user();
                                         <label class="block text-[10px] font-bold text-zinc-400 uppercase mb-1">Aprovador</label>
                                         <select wire:model="financeApprover" class="w-full border border-[#cbd5e1] bg-white dark:bg-zinc-900 px-3 py-1.5 text-xs rounded text-zinc-900 dark:text-zinc-100" required>
                                             <option value="">Selecione o Aprovador</option>
-                                            @foreach($dbUsers as $user)
+                                            @foreach($dbFinanceUsers as $user)
                                             <option value="{{ $user->name }}">{{ $user->name }}</option>
                                             @endforeach
                                         </select>
@@ -739,7 +761,7 @@ $currentUser = auth()->user();
                                         <tr>
                                             <th class="px-3 py-2">Tipo</th>
                                             <th class="px-3 py-2">Lançamento</th>
-                                            <th class="px-3 py-2">Previsto / Final</th>
+                                            <th class="px-3 py-2">Valor</th>
                                             <th class="px-3 py-2">Referente a</th>
                                             <th class="px-3 py-2">Resp. / Aprov.</th>
                                             <th class="px-3 py-2">Ações</th>
@@ -756,11 +778,8 @@ $currentUser = auth()->user();
                                             <td class="px-3 py-2 text-[11px] font-mono text-zinc-900 dark:text-zinc-100">
                                                 {{ $t->transaction_date->toDateString() }}
                                             </td>
-                                            <td class="px-3 py-2 font-mono text-[11px]">
-                                                <div class="flex flex-col">
-                                                    <span>P: R$ {{ number_format($t->projected_cost, 2, ',', '.') }}</span>
-                                                    <span class="font-bold text-zinc-950 dark:text-zinc-50">F: R$ {{ number_format($t->final_cost, 2, ',', '.') }}</span>
-                                                </div>
+                                            <td class="px-3 py-2 font-mono text-[11px] font-bold text-zinc-950 dark:text-zinc-50">
+                                                R$ {{ number_format($t->final_cost, 2, ',', '.') }}
                                             </td>
                                             <td class="px-3 py-2">
                                                 <div class="flex flex-col">
@@ -790,6 +809,128 @@ $currentUser = auth()->user();
                                 </table>
                             </div>
                         </div>
+                        @endif
+
+                        <!-- PARECER TAB -->
+                        @if($activeTab === 'parecer')
+                        @if($currentUser->can('parecer:visualizar'))
+                        <div class="flex flex-col gap-4">
+                            <div class="flex items-center justify-between border-b border-zinc-200 pb-3 dark:border-zinc-800">
+                                <div>
+                                    <h2 class="text-sm font-bold text-[#154f85] dark:text-blue-400">Parecer de Lançamentos</h2>
+                                    <p class="text-[10px] text-zinc-400">Histórico de auditoria imutável dos lançamentos financeiros criados</p>
+                                </div>
+                            </div>
+
+                            @php
+                                $groupedAudits = $dbAudits->groupBy(fn($a) => $a->criado_em->toDateString())->sortKeysDesc();
+                            @endphp
+
+                            @if($dbAudits->isEmpty())
+                                <div class="py-8 text-center text-zinc-450 text-xs">
+                                    Nenhum registro de auditoria disponível.
+                                </div>
+                            @else
+                                <div class="space-y-6">
+                                    @foreach($groupedAudits as $dateStr => $dayAudits)
+                                        @php
+                                            $today = now()->toDateString();
+                                            $yesterday = now()->subDay()->toDateString();
+                                            $date = \Carbon\Carbon::parse($dateStr);
+                                            $formattedDate = $date->format('d/m/Y');
+                                            if ($dateStr === $today) {
+                                                $header = 'Hoje - ' . $formattedDate;
+                                            } elseif ($dateStr === $yesterday) {
+                                                $header = 'Ontem - ' . $formattedDate;
+                                            } else {
+                                                $header = $formattedDate;
+                                            }
+                                        @endphp
+                                        <div class="space-y-2">
+                                            <h3 class="text-xs font-bold text-zinc-500 uppercase tracking-wide border-b border-zinc-150 dark:border-zinc-800 pb-1">
+                                                {{ $header }}
+                                            </h3>
+                                            
+                                            <div class="divide-y divide-zinc-100 dark:divide-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded bg-white dark:bg-zinc-950 overflow-hidden">
+                                                @foreach($dayAudits as $audit)
+                                                    <button type="button" wire:click="showAuditDetails({{ $audit->id }})" class="w-full text-left p-3 hover:bg-zinc-50 dark:hover:bg-zinc-900/40 transition flex items-center gap-3 text-xs active:scale-[0.99]">
+                                                        <span class="font-mono font-semibold text-zinc-400 shrink-0">
+                                                            {{ $audit->criado_em->format('H:i') }}
+                                                        </span>
+                                                        <span class="h-2 w-2 rounded-full shrink-0 {{ $audit->tipo_lancamento === 'RECEITA' ? 'bg-emerald-500' : 'bg-rose-500' }}"></span>
+                                                        <span class="flex-1 font-medium text-zinc-700 dark:text-zinc-300 truncate">
+                                                            {{ $audit->descricao_curta }}
+                                                        </span>
+                                                        <span class="text-[10px] text-indigo-600 dark:text-indigo-400 hover:underline uppercase font-bold text-[9px] tracking-wider shrink-0">
+                                                            Ver Detalhes
+                                                        </span>
+                                                    </button>
+                                                @endforeach
+                                            </div>
+                                        </div>
+                                    @endforeach
+                                </div>
+                            @endif
+                        </div>
+                        @else
+                        <div class="p-8 text-center text-zinc-500 font-medium">
+                            ⚠️ Você não possui permissões para visualizar os pareceres e auditoria financeira.
+                        </div>
+                        @endif
+                        @endif
+
+                        <!-- REDE SOCIAL TAB -->
+                        @if($activeTab === 'redesocial')
+                        <div class="flex flex-col gap-4 max-w-2xl mx-auto py-4">
+                            <div class="bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded p-6 shadow-sm">
+                                <div class="flex items-center gap-3 border-b border-zinc-200 dark:border-zinc-800 pb-4 mb-4">
+                                    <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-[#f0f9ff] dark:bg-zinc-900 text-xl text-emerald-500">
+                                        💬
+                                    </div>
+                                    <div>
+                                        <h2 class="text-sm font-bold text-[#154f85] dark:text-blue-400">Disparador de Mensagem WhatsApp</h2>
+                                        <p class="text-[10px] text-zinc-400">Envie mensagens rápidas utilizando a API oficial do WhatsApp</p>
+                                    </div>
+                                </div>
+
+                                <form id="whatsapp-sender-form" onsubmit="sendWhatsappMessage(event)" class="space-y-4">
+                                    <div class="flex flex-col gap-1.5">
+                                        <label for="wa-number" class="text-xs font-semibold text-zinc-600 dark:text-zinc-400">Número do Celular</label>
+                                        <input type="text" id="wa-number" required placeholder="Ex: +55 (11) 99999-9999" class="w-full text-xs border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 rounded p-2 text-zinc-800 dark:text-zinc-100 outline-none transition focus:border-zinc-400 focus:ring-1 focus:ring-zinc-400">
+                                        <span class="text-[9px] text-zinc-450">Lembre-se de incluir o DDI (55 para Brasil) e o DDD.</span>
+                                    </div>
+
+                                    <div class="flex flex-col gap-1.5">
+                                        <label for="wa-message" class="text-xs font-semibold text-zinc-600 dark:text-zinc-400">Mensagem</label>
+                                        <textarea id="wa-message" required rows="5" placeholder="Digite o texto que deseja enviar..." class="w-full text-xs border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 rounded p-2 text-zinc-800 dark:text-zinc-100 outline-none transition focus:border-zinc-400 focus:ring-1 focus:ring-zinc-400 resize-none"></textarea>
+                                    </div>
+
+                                    <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white rounded p-2 text-xs font-bold transition flex items-center justify-center gap-1.5 active:scale-[0.98]">
+                                        <span>🚀</span> Enviar via WhatsApp
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+
+                        <script>
+                            function sendWhatsappMessage(e) {
+                                e.preventDefault();
+                                const number = document.getElementById('wa-number').value.trim();
+                                const message = document.getElementById('wa-message').value.trim();
+
+                                if (!number || !message) return;
+
+                                const cleanNumber = number.replace(/\D/g, '');
+                                if (cleanNumber.length < 8) {
+                                    alert('Digite um número de telefone válido (com DDI e DDD).');
+                                    return;
+                                }
+
+                                const encodedMessage = encodeURIComponent(message);
+                                const url = `https://api.whatsapp.com/send?phone=${cleanNumber}&text=${encodedMessage}`;
+                                window.open(url, '_blank');
+                            }
+                        </script>
                         @endif
 
                         <!-- CAMPANHAS TAB -->
@@ -2011,10 +2152,10 @@ $currentUser = auth()->user();
                             <div class="grid gap-4 lg:grid-cols-2">
                                 <div class="border border-[#c0c7d0] bg-white dark:bg-zinc-950 p-4">
                                     <h3 class="font-bold text-[#154f85] dark:text-blue-400 border-b border-[#cbd5e1] pb-2 mb-3">Terminal de Comando</h3>
-                                    <form wire:submit.prevent="runTerminal" class="space-y-4">
-                                        <input type="text" wire:model.defer="debugCommand" class="w-full border border-[#cbd5e1] bg-[#fbfdff] dark:bg-zinc-900 px-3 py-2 font-mono text-[12px] text-zinc-900 dark:text-zinc-100 rounded focus:border-[#157fcc] outline-none" placeholder="php artisan queue:work --once">
+                                    <form wire:submit.prevent="runTerminal" x-data="{ command: '' }" class="space-y-4">
+                                        <input type="text" wire:model.defer="debugCommand" x-model="command" class="w-full border border-[#cbd5e1] bg-[#fbfdff] dark:bg-zinc-900 px-3 py-2 font-mono text-[12px] text-zinc-900 dark:text-zinc-100 rounded focus:border-[#157fcc] outline-none" placeholder="php artisan queue:work --once">
                                         <div class="flex gap-2">
-                                            <button type="submit" class="px-4 py-2 bg-[#1f2937] text-white font-semibold text-xs rounded hover:bg-black transition">Executar</button>
+                                            <button type="submit" :disabled="command.trim().length < 2" class="px-4 py-2 bg-[#1f2937] text-white font-semibold text-xs rounded hover:bg-black transition disabled:opacity-50 disabled:cursor-not-allowed">Executar</button>
                                             <button type="button" wire:click="useLatestLog" class="border border-[#cbd5e1] px-4 py-2 text-xs font-semibold rounded hover:bg-zinc-50">Último log</button>
                                             <button type="button" wire:click="downloadTail" class="px-4 py-2 bg-[#eef6ff] text-[#154f85] font-semibold border border-[#154f85] text-xs rounded hover:bg-[#dfeeff]">Baixar arquivo completo</button>
                                         </div>
@@ -2035,13 +2176,65 @@ $currentUser = auth()->user();
                                         <p class="text-zinc-400 italic">Nenhum log encontrado.</p>
                                         @endforelse
                                     </div>
-                                </div>
                             </div>
 
                             <div class="border border-[#c0c7d0] bg-white dark:bg-zinc-950 p-4">
                                 <h3 class="font-bold text-[#154f85] dark:text-blue-400 border-b border-[#cbd5e1] pb-2 mb-3">Saída do Terminal</h3>
                                 <pre class="min-h-56 bg-zinc-900 text-emerald-400 p-4 font-mono text-[11px] overflow-auto rounded">{{ $debugOutput ?: 'Nenhuma saída ainda.' }}</pre>
                             </div>
+
+                            <!-- ROW FOR LOG DETAILS GROUPED BY DAY -->
+                            @if($tailPath)
+                            <div class="border border-[#c0c7d0] bg-white dark:bg-zinc-950 p-4">
+                                <div class="flex items-center justify-between border-b border-[#cbd5e1] dark:border-zinc-800 pb-2 mb-3">
+                                    <h3 class="font-bold text-[#154f85] dark:text-blue-400">
+                                        Conteúdo do Log por Dia: 
+                                        <span class="text-xs font-mono font-normal text-zinc-500">{{ basename($tailPath) }}</span>
+                                    </h3>
+                                    <button type="button" wire:click="refreshTail" class="px-3 py-1 bg-[#1f2937] hover:bg-black text-white font-semibold text-xs rounded transition">Atualizar Log</button>
+                                </div>
+                                
+                                @if($tailError)
+                                    <div class="border border-rose-200 bg-rose-50 px-3 py-2 text-xs text-rose-800 rounded">{{ $tailError }}</div>
+                                @else
+                                    @php
+                                        $parsedLogs = $this->getParsedLogsByDay();
+                                    @endphp
+
+                                    @if(empty($parsedLogs))
+                                        <div class="py-8 text-center text-zinc-450 text-xs">
+                                            Nenhum log correspondente encontrado no arquivo selecionado.
+                                        </div>
+                                    @else
+                                        <div class="space-y-4 max-h-[350px] overflow-y-auto pr-1">
+                                            @foreach($parsedLogs as $day => $logEntries)
+                                                <div class="space-y-1.5">
+                                                    <h4 class="text-xs font-bold text-zinc-500 uppercase tracking-wide border-b border-zinc-100 dark:border-zinc-800 pb-1 flex items-center justify-between">
+                                                        <span>
+                                                            @if($day === 'Desconhecido')
+                                                                Logs sem Data Identificada
+                                                            @else
+                                                                {{ \Carbon\Carbon::parse($day)->format('d/m/Y') }}
+                                                            @endif
+                                                        </span>
+                                                        <span class="text-[9px] bg-zinc-100 dark:bg-zinc-800 px-1.5 py-0.5 rounded text-zinc-450 font-normal">
+                                                            {{ count($logEntries) }} ocorrências
+                                                        </span>
+                                                    </h4>
+                                                    <div class="bg-zinc-900 text-zinc-200 p-3 rounded font-mono text-[10px] space-y-1.5 overflow-x-auto whitespace-pre-wrap leading-relaxed max-h-56">
+                                                        @foreach($logEntries as $entry)
+                                                            <div class="border-b border-zinc-800 pb-1.5 mb-1.5 last:border-0 last:pb-0 last:mb-0">
+                                                                {{ $entry }}
+                                                            </div>
+                                                        @endforeach
+                                                    </div>
+                                                </div>
+                                            @endforeach
+                                        </div>
+                                    @endif
+                                @endif
+                            </div>
+                            @endif
                         </div>
                         @endif
 
@@ -2065,6 +2258,93 @@ $currentUser = auth()->user();
                 </footer>
 
             </main>
+
+            @if($selectedAudit)
+            <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/55 backdrop-blur-xs p-4">
+                <div class="bg-white dark:bg-zinc-950 rounded-xl border border-zinc-200 dark:border-zinc-800 max-w-xl w-full shadow-2xl overflow-hidden flex flex-col max-h-[85vh]">
+                    <div class="p-4 border-b border-zinc-100 dark:border-zinc-800 flex justify-between items-center bg-[#fdfdfd] dark:bg-zinc-900">
+                        <h3 class="font-bold text-sm text-[#154f85] dark:text-blue-400 flex items-center gap-1.5">
+                            <span>Parecer Técnico #{{ $selectedAudit->id }}</span>
+                            <span class="text-[9px] px-2 py-0.5 rounded font-black tracking-wider uppercase {{ $selectedAudit->tipo_lancamento === 'RECEITA' ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-300' : 'bg-rose-100 text-rose-800 dark:bg-rose-950/50 dark:text-rose-300' }}">
+                                {{ $selectedAudit->tipo_lancamento }}
+                            </span>
+                        </h3>
+                        <button type="button" wire:click="closeAuditDetails" class="text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 text-base">
+                            ✕
+                        </button>
+                    </div>
+
+                    <div class="p-6 overflow-y-auto space-y-4 text-xs">
+                        <div class="grid grid-cols-2 gap-4 border-b border-zinc-100 dark:border-zinc-900 pb-4">
+                            <div>
+                                <span class="text-[10px] text-zinc-400 font-bold uppercase block mb-0.5">Valor</span>
+                                <span class="font-black text-sm text-zinc-800 dark:text-zinc-100">
+                                    R$ {{ number_format($selectedAudit->valor, 2, ',', '.') }}
+                                </span>
+                            </div>
+                            <div>
+                                <span class="text-[10px] text-zinc-400 font-bold uppercase block mb-0.5">Data/Hora Auditoria</span>
+                                <span class="font-medium text-zinc-800 dark:text-zinc-100 font-mono">
+                                    {{ $selectedAudit->criado_em->format('d/m/Y H:i:s') }}
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-4 border-b border-zinc-100 dark:border-zinc-900 pb-4">
+                            <div>
+                                <span class="text-[10px] text-zinc-400 font-bold uppercase block mb-0.5">Tipo de Entidade</span>
+                                <span class="font-semibold text-zinc-800 dark:text-zinc-100 capitalize">
+                                    {{ str_replace('_', ' ', strtolower($selectedAudit->tipo_entidade)) }}
+                                </span>
+                            </div>
+                            <div>
+                                <span class="text-[10px] text-zinc-400 font-bold uppercase block mb-0.5">Entidade Vinculada</span>
+                                <span class="font-bold text-zinc-800 dark:text-zinc-100 font-mono">
+                                    {{ $selectedAudit->entidade_descricao ?? $selectedAudit->entidade_id }}
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-4 border-b border-zinc-100 dark:border-zinc-900 pb-4">
+                            <div>
+                                <span class="text-[10px] text-zinc-400 font-bold uppercase block mb-0.5">Usuário Autor</span>
+                                <span class="font-semibold text-zinc-800 dark:text-zinc-100">
+                                    {{ $selectedAudit->usuario_logado_nome ?? 'Sistema' }}
+                                </span>
+                                @if($selectedAudit->usuario_logado_id)
+                                    <span class="text-[9px] font-mono text-zinc-400 block">ID: {{ $selectedAudit->usuario_logado_id }}</span>
+                                @endif
+                            </div>
+                            <div>
+                                <span class="text-[10px] text-zinc-400 font-bold uppercase block mb-0.5">Aprovado Por</span>
+                                <span class="font-semibold text-zinc-800 dark:text-zinc-100">
+                                    {{ $selectedAudit->aprovado_por_nome ?? '—' }}
+                                </span>
+                                @if($selectedAudit->aprovado_por_id)
+                                    <span class="text-[9px] font-mono text-zinc-400 block">ID: {{ $selectedAudit->aprovado_por_id }}</span>
+                                @endif
+                            </div>
+                        </div>
+
+                        <div>
+                            <span class="text-[10px] text-zinc-400 font-bold uppercase block mb-0.5">Lançamento ID Original</span>
+                            <span class="font-mono text-zinc-600 dark:text-zinc-300 font-bold">{{ $selectedAudit->lancamento_id }}</span>
+                        </div>
+
+                        <div class="space-y-1.5">
+                            <span class="text-[10px] text-zinc-400 font-bold uppercase block text-zinc-400">Payload Enviado ao Backend</span>
+                            <pre class="p-3 bg-zinc-950 text-emerald-400 font-mono text-[11px] rounded-lg overflow-auto max-h-48 border border-zinc-850 whitespace-pre">{{ json_encode($selectedAudit->payload, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) }}</pre>
+                        </div>
+                    </div>
+
+                    <div class="p-4 border-t border-zinc-100 dark:border-zinc-800 bg-[#fdfdfd] dark:bg-zinc-900 flex justify-end">
+                        <button type="button" wire:click="closeAuditDetails" class="px-4 py-2 bg-zinc-600 hover:bg-zinc-700 text-white rounded font-bold transition active:scale-95 text-xs">
+                            Fechar Parecer
+                        </button>
+                    </div>
+                </div>
+            </div>
+            @endif
 
         </div>
 

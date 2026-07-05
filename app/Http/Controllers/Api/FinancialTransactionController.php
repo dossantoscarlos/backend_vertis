@@ -37,6 +37,8 @@ class FinancialTransactionController extends Controller
             $this->toAttributes($data, $data['id'] ?? 'fin-'.Str::ulid())
         );
 
+        \App\Support\FinancialAuditService::audit($tx, $data);
+
         return response()->json($serializer->financialTransaction($tx), 201);
     }
 
@@ -75,7 +77,7 @@ class FinancialTransactionController extends Controller
             'type' => ['required', 'string', 'in:receita,despesa'],
             'transactionDate' => ['required', 'date'],
             'competencyDate' => ['nullable', 'date'],
-            'projectedCost' => ['required', 'numeric', 'min:0'],
+            'projectedCost' => ['nullable', 'numeric', 'min:0'],
             'finalCost' => ['required', 'numeric', 'min:0'],
             'entityType' => ['required', 'string', 'in:campanha,locais,eventos'],
             'entityExternalId' => ['required', 'string', 'max:255'],
@@ -85,6 +87,9 @@ class FinancialTransactionController extends Controller
 
         if (empty($data['competencyDate'])) {
             $data['competencyDate'] = $data['transactionDate'];
+        }
+        if (empty($data['projectedCost']) && isset($data['finalCost'])) {
+            $data['projectedCost'] = $data['finalCost'];
         }
 
         return $data;

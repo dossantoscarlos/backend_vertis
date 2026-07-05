@@ -145,4 +145,28 @@ class DashboardSerializer
             'link' => $survey->link,
         ];
     }
+
+    /**
+     * @return array{id: int, lancamentoId: string, tipoLancamento: string, valor: float, tipoEntidade: string, entidadeId: string, entidadeDescricao: string|null, usuarioLogadoId: int|null, usuarioLogadoNome: string|null, aprovadoPorId: int|null, aprovadoPorNome: string|null, descricaoCurta: string, payload: array, criadoEm: string}
+     */
+    public function financialAudit(\App\Models\AuditoriaFinanceira $audit): array
+    {
+        return [
+            'id' => $audit->id,
+            'lancamentoId' => $audit->lancamento_id,
+            'tipoLancamento' => $audit->tipo_lancamento,
+            'valor' => (float) $audit->valor,
+            'tipoEntidade' => $audit->tipo_entidade,
+            'entidadeId' => $audit->entidade_id,
+            'entidadeDescricao' => $audit->entidade_descricao,
+            'usuarioLogadoId' => $audit->usuario_logado_id,
+            'usuarioLogadoNome' => $audit->usuario_logado_nome,
+            'aprovadoPorId' => $audit->aprovado_por_id,
+            'aprovado_por_nome' => $audit->aprovado_por_nome, // Keep support for both just in case
+            'aprovadoPorNome' => $audit->aprovado_por_nome,
+            'descricaoCurta' => $audit->descricao_curta,
+            'payload' => $audit->payload,
+            'criadoEm' => $audit->criado_em->toIso8601String(),
+        ];
+    }
 }

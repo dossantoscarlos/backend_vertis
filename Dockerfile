@@ -27,7 +27,8 @@ RUN apt-get update && apt-get install -y \
     libpng-dev \
     libpq-dev \
     libxml2-dev \
-    libicu-dev
+    libicu-dev \
+    npm
 
 RUN docker-php-ext-install mysqli pdo pdo_mysql pdo_pgsql pgsql session xml intl bcmath
 
@@ -65,6 +66,10 @@ COPY ./docker/nginx/nginx.conf /etc/nginx/nginx.conf
 COPY ./docker/nginx/sites /etc/nginx/sites-available
 
 RUN apt-get clean && rm -rf /var/lib/apt/lists/*
+
+RUN apt install npm -y
+
+RUN npm run build
 
 EXPOSE 10000
 

@@ -4,9 +4,13 @@
     "type": "module",
     "scripts": {
         "build": "vite build",
-        "dev": "vite"
+        "dev": "vite",
+        "ws-proxy": "node websocket/lsp-proxy.js"
     },
     "devDependencies": {
+        "ws": "^8.17.0",
+        "vscode-ws-jsonrpc": "^1.0.0",
+        "vscode-languageserver-protocol": "^3.17.5",
         "@tailwindcss/vite": "^4.0.0",
         "concurrently": "^9.0.1",
         "laravel-vite-plugin": "^3.1",

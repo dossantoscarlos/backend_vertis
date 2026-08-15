@@ -37,3 +37,11 @@ Route::get('/modulos', function () {
 Route::get('/support', function () {
     return redirect()->route('dashboard');
 });
+
+// Inclui rotas do editor
+require __DIR__.'/editor.php';
+
+// Livewire editor page
+Route::get('/livewire-editor', function () {
+    return view('livewire-editor');
+});
